@@ -269,11 +269,14 @@ body:
                 - system: http://terminology.hl7.org/CodeSystem/observation-category
                   code: social-history
           code:
+            text: Pregnancy status
             coding:
               - system: http://loinc.org
+                display: Pregnancy status
                 code: "82810-3"
               - system: http://snomed.info/sct
                 code: "364320009"
+                display: Pregnancy status
           subject:
             reference: "Patient/{{ %patientId }}"
           effectiveDateTime: "{{ %effectiveDateTime }}"
