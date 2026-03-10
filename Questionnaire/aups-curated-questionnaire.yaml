@@ -1313,6 +1313,3 @@ item:
             text: Document Date
             type: dateTime
             required: true
-            initialExpression:
-              language: text/fhirpath
-              expression: "now()"            
