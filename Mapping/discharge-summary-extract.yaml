@@ -1,5 +1,5 @@
 resourceType: Mapping
-id: encounter-record-extract
+id: discharge-summary-extract
 type: FHIRPath
 body:
   "{% assign %}":
@@ -166,7 +166,7 @@ body:
           - title: Procedures
             code:
               coding:
-                - code: 30.1403-0
+                - code: 29554-3
                   system: http://loinc.org
             text:
               status: generated
