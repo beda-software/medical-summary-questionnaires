@@ -94,6 +94,9 @@ item:
             text: Problem
             type: group
             repeats: true
+            itemControl:
+              coding:
+              - code: group-table
             itemPopulationContext:
               language: text/fhirpath
               expression: "%PatientConditionsBundle.entry[0].resource.entry.resource"
@@ -296,6 +299,10 @@ item:
             text: Allergy/Intolerance
             type: group
             repeats: true
+            itemControl:
+              coding:
+              - code: group-table
+ 
             itemPopulationContext:
               language: text/fhirpath
               expression: "%PatientAllergiesBundle.entry[0].resource.entry.resource"
@@ -522,6 +529,10 @@ item:
             text: Medication
             type: group
             repeats: true
+            itemControl:
+              coding:
+              - code: group-table
+ 
             itemPopulationContext:
               language: text/fhirpath
               expression: "%PatientMedicationStatementsBundle.entry[0].resource.entry.resource"
@@ -810,6 +821,10 @@ item:
           - linkId: immunizations
             text: Immunization
             type: group
+            itemControl:
+              coding:
+              - code: group-table
+ 
             repeats: true
             itemPopulationContext:
               language: text/fhirpath
@@ -1031,6 +1046,10 @@ item:
           - linkId: procedures
             text: Procedure
             type: group
+            itemControl:
+              coding:
+              - code: group-table
+ 
             repeats: true
             itemPopulationContext:
               language: text/fhirpath
