@@ -189,6 +189,7 @@ item:
               - linkId: condition-notes
                 text: Notes
                 type: text
+                entryFormat: Write here
                 initialExpression:
                   language: text/fhirpath
                   expression: "%context.note.text"
@@ -278,6 +279,232 @@ item:
                         '  \n\nNotes: '
                           & repeat(item)
                             .where(linkId='condition-notes')
+                            .answer.valueString.first(),
+                        ''
+                      ),
+                      ''
+                    )
+                  )
+                  .where($this != '')
+                  .join('\n\n\n')
+
+      - linkId: allergies-section
+        text: Allergies & Intolerances
+        type: group
+        item:
+          - linkId: allergies
+            text: Allergy/Intolerance
+            type: group
+            repeats: true
+            itemPopulationContext:
+              language: text/fhirpath
+              expression: "%PatientAllergiesBundle.entry[0].resource.entry.resource"
+              name: allergy
+            item:
+              - linkId: allergy-id
+                text: Allergy ID
+                type: string
+                hidden: true
+                initialExpression:
+                  language: text/fhirpath
+                  expression: "%context.id"
+
+              - linkId: allergy-code
+                text: Allergy or Intolerance
+                type: choice
+                entryFormat: Select allergy or intolerance
+                required: true
+                initialExpression:
+                  language: text/fhirpath
+                  expression: "%context.code.coding"
+                answerValueSet: https://healthterminologies.gov.au/fhir/ValueSet/indicator-hypersensitivity-intolerance-to-substance-2
+                preferredTerminologyServer: https://tx.ontoserver.csiro.au/fhir
+
+              - linkId: allergy-type
+                text: Type
+                type: choice
+                entryFormat: Select type
+                answerOption:
+                  - valueCoding:
+                      system: http://hl7.org/fhir/allergy-intolerance-type
+                      code: allergy
+                      display: Allergy
+                  - valueCoding:
+                      system: http://hl7.org/fhir/allergy-intolerance-type
+                      code: intolerance
+                      display: Intolerance
+                initialExpression:
+                  language: text/fhirpath
+                  expression: "%Questionnaire.repeat(item).where(linkId='allergy-type').answerOption.valueCoding.where(code=%context.type)"
+
+              - linkId: allergy-onset-datetime
+                text: Onset Date/Time
+                helpText: "When the allergy or intolerance was first diagnosed?"
+                type: dateTime
+                initialExpression:
+                  language: text/fhirpath
+                  expression: "%context.onsetDateTime"
+
+              - linkId: allergy-clinical-status
+                text: Clinical Status
+                type: choice
+                entryFormat: Select clinical status
+                answerValueSet: http://hl7.org/fhir/ValueSet/allergyintolerance-clinical
+                preferredTerminologyServer: https://tx.ontoserver.csiro.au/fhir
+                initialExpression:
+                  language: text/fhirpath
+                  expression: "%context.clinicalStatus.coding"
+
+              - linkId: allergy-verification-status
+                text: Verification Status
+                type: choice
+                entryFormat: Select verification status
+                answerValueSet: http://hl7.org/fhir/ValueSet/allergyintolerance-verification
+                preferredTerminologyServer: https://tx.ontoserver.csiro.au/fhir
+                initialExpression:
+                  language: text/fhirpath
+                  expression: "%context.verificationStatus.coding"
+            
+              - linkId: allergy-notes
+                text: Notes
+                type: text
+                entryFormat: Write here
+                initialExpression:
+                  language: text/fhirpath
+                  expression: "%context.note.text"
+
+              - linkId: allergy-reaction-group
+                text: Reaction
+                type: group
+                repeats: true
+                itemPopulationContext:
+                  language: text/fhirpath
+                  expression: "%context.reaction"
+                item:
+                  - linkId: allergy-manifestation
+                    text: Manifestation
+                    type: choice
+                    entryFormat: Select manifestation
+                    required: true
+                    initialExpression:
+                      language: text/fhirpath
+                      expression: "%context.manifestation.coding"
+                    answerValueSet: https://healthterminologies.gov.au/fhir/ValueSet/adverse-reaction-clinical-manifestation-1
+                    preferredTerminologyServer: https://tx.ontoserver.csiro.au/fhir
+
+                  - linkId: allergy-severity
+                    text: Severity
+                    type: choice
+                    entryFormat: Select severity
+                    initialExpression:
+                      language: text/fhirpath
+                      expression: "%Questionnaire.repeat(item).where(linkId='allergy-severity').answerOption.valueCoding.where(code=%context.severity)"
+                    answerOption:
+                      - valueCoding:
+                          system: http://hl7.org/fhir/reaction-event-severity
+                          code: mild
+                          display: Mild
+                      - valueCoding:
+                          system: http://hl7.org/fhir/reaction-event-severity
+                          code: moderate
+                          display: Moderate
+                      - valueCoding:
+                          system: http://hl7.org/fhir/reaction-event-severity
+                          code: severe
+                          display: Severe
+
+          - linkId: allergies-summary
+            text: Summary
+            type: text
+            readOnly: true
+            calculatedExpression:
+              language: text/fhirpath
+              expression: >-
+                %resource.repeat(item)
+                  .where(linkId='allergies')
+                  .select(
+                    iif(
+                      repeat(item)
+                        .where(linkId='allergy-code')
+                        .answer.valueCoding.exists(),
+                      'Allergy: '
+                        & repeat(item)
+                          .where(linkId='allergy-code')
+                          .answer.valueCoding.display.first()
+                      & iif(
+                        repeat(item)
+                          .where(linkId='allergy-type')
+                          .answer.valueCoding.exists(),
+                        '  \nType: '
+                          & repeat(item)
+                            .where(linkId='allergy-type')
+                            .answer.valueCoding.display.first(),
+                        ''
+                      )
+                      & iif(
+                        repeat(item)
+                          .where(linkId='allergy-clinical-status')
+                          .answer.valueCoding.exists(),
+                        '  \nClinical status: '
+                          & repeat(item)
+                            .where(linkId='allergy-clinical-status')
+                            .answer.valueCoding.display.first(),
+                        ''
+                      )
+                      & iif(
+                        repeat(item)
+                          .where(linkId='allergy-verification-status')
+                          .answer.valueCoding.exists(),
+                        '  \nVerification status: '
+                          & repeat(item)
+                            .where(linkId='allergy-verification-status')
+                            .answer.valueCoding.display.first(),
+                        ''
+                      )
+                      & iif(
+                        repeat(item)
+                          .where(linkId='allergy-onset-datetime')
+                          .answer.valueDateTime.exists(),
+                        '  \nOnset: '
+                          & repeat(item)
+                            .where(linkId='allergy-onset-datetime')
+                            .answer.valueDateTime.first().toString(),
+                        ''
+                      )
+                      & iif(
+                        repeat(item)
+                          .where(linkId='allergy-reaction-group')
+                          .answer.exists(),
+                        '  \nReactions: '
+                          & repeat(item)
+                            .where(linkId='allergy-reaction-group')
+                            .select(
+                              repeat(item)
+                                .where(linkId='allergy-manifestation')
+                                .answer.valueCoding.display.first()
+                              & iif(
+                                repeat(item)
+                                  .where(linkId='allergy-severity')
+                                  .answer.valueCoding.exists(),
+                                ' ('
+                                  & repeat(item)
+                                    .where(linkId='allergy-severity')
+                                    .answer.valueCoding.display.first()
+                                  & ')',
+                                ''
+                              )
+                            )
+                            .where($this.exists())
+                            .join(', '),
+                        ''
+                      )
+                      & iif(
+                        repeat(item)
+                          .where(linkId='allergy-notes')
+                          .answer.valueString.exists(),
+                        '  \n\nNotes: '
+                          & repeat(item)
+                            .where(linkId='allergy-notes')
                             .answer.valueString.first(),
                         ''
                       ),
@@ -412,6 +639,7 @@ item:
           - linkId: medications-summary
             text: Summary
             type: text
+            readOnly: true
             calculatedExpression:
               language: text/fhirpath
               expression: >-
@@ -666,6 +894,7 @@ item:
               - linkId: immunization-notes
                 text: Notes
                 type: text
+                entryFormat: Write here
                 initialExpression:
                   language: text/fhirpath
                   expression: "%context.note.first().text"
@@ -673,6 +902,7 @@ item:
           - linkId: immunizations-summary
             text: Summary
             type: text
+            readOnly: true
             calculatedExpression:
               language: text/fhirpath
               expression: >-
@@ -889,6 +1119,7 @@ item:
           - linkId: procedures-summary
             text: Summary
             type: text
+            readOnly: true
             calculatedExpression:
               language: text/fhirpath
               expression: >-
@@ -949,112 +1180,120 @@ item:
             initialExpression:
               language: text/fhirpath
               expression: "%Patient.name.first().given.first() + ' ' + %Patient.name.first().family + ' AUPS document'"
-          - linkId: patient-id
-            text: Patient ID
-            type: string
-            hidden: true
-            initialExpression:
-              language: text/fhirpath
-              expression: "%Patient.id"
 
-          - linkId: patient-name
-            text: Name
-            type: string
-            readOnly: true
-            initialExpression:
-              language: text/fhirpath
-              expression: "%Patient.name.first().given.first() + ' ' + %Patient.name.first().family"
+          - linkId: patient-information
+            text: Patient Information
+            type: group
+            item:
+              - linkId: patient-id
+                text: Patient ID
+                type: string
+                hidden: true
+                initialExpression:
+                  language: text/fhirpath
+                  expression: "%Patient.id"
 
-          - linkId: patient-medicare-number
-            text: Medicare Number
-            type: string
-            readOnly: true
-            initialExpression:
-              language: text/fhirpath
-              expression: "%Patient.identifier.where(system='http://ns.electronichealth.net.au/id/medicare-number').first().value"
+              - linkId: patient-name
+                text: Name
+                type: string
+                readOnly: true
+                initialExpression:
+                  language: text/fhirpath
+                  expression: "%Patient.name.first().given.first() + ' ' + %Patient.name.first().family"
 
-          - linkId: patient-gender
-            text: Gender
-            type: string
-            readOnly: true
-            initialExpression:
-              language: text/fhirpath
-              expression: "%Patient.gender"
+              - linkId: patient-medicare-number
+                text: Medicare Number
+                type: string
+                readOnly: true
+                initialExpression:
+                  language: text/fhirpath
+                  expression: "%Patient.identifier.where(system='http://ns.electronichealth.net.au/id/medicare-number').first().value"
 
-          - linkId: patient-birthDate
-            text: Birth Date
-            type: date
-            readOnly: true
-            initialExpression:
-              language: text/fhirpath
-              expression: "%Patient.birthDate"
- 
-          - linkId: encounter-summary
-            type: display
-            itemControl:
-              coding:
-                - code: markdown
-            _text:
-              cqfExpression:
-                language: text/fhirpath
-                expression: >-
-                  iif(
-                    (
-                      %resource.repeat(item).where(linkId='problems-summary').first().answer.valueString.exists()
-                      or %resource.repeat(item).where(linkId='allergies-summary').first().answer.valueString.exists()
-                      or %resource.repeat(item).where(linkId='social-history-summary').first().answer.valueString.exists()
-                      or %resource.repeat(item).where(linkId='procedures-summary').first().answer.valueString.exists()
-                      or %resource.repeat(item).where(linkId='medications-summary').first().answer.valueString.exists()
-                      or %resource.repeat(item).where(linkId='immunizations-summary').first().answer.valueString.exists()
-                      or %resource.repeat(item).where(linkId='vital-signs-summary').first().answer.valueString.exists()
-                    ),
-                    (
+              - linkId: patient-gender
+                text: Gender
+                type: string
+                readOnly: true
+                initialExpression:
+                  language: text/fhirpath
+                  expression: "%Patient.gender"
+
+              - linkId: patient-birthDate
+                text: Birth Date
+                type: date
+                readOnly: true
+                initialExpression:
+                  language: text/fhirpath
+                  expression: "%Patient.birthDate"
+    
+              - linkId: encounter-summary
+                type: display
+                itemControl:
+                  coding:
+                    - code: markdown
+                _text:
+                  cqfExpression:
+                    language: text/fhirpath
+                    expression: >-
                       iif(
-                        %resource.repeat(item).where(linkId='problems-summary').first().answer.valueString.exists(),
-                        '## Problems' & '\n\n' & %resource.repeat(item).where(linkId='problems-summary').first().answer.valueString.first(),
-                        ''
+                        (
+                          %resource.repeat(item).where(linkId='problems-summary').first().answer.valueString.exists()
+                          or %resource.repeat(item).where(linkId='allergies-summary').first().answer.valueString.exists()
+                          or %resource.repeat(item).where(linkId='social-history-summary').first().answer.valueString.exists()
+                          or %resource.repeat(item).where(linkId='procedures-summary').first().answer.valueString.exists()
+                          or %resource.repeat(item).where(linkId='medications-summary').first().answer.valueString.exists()
+                          or %resource.repeat(item).where(linkId='immunizations-summary').first().answer.valueString.exists()
+                          or %resource.repeat(item).where(linkId='vital-signs-summary').first().answer.valueString.exists()
+                        ),
+                        (
+                          iif(
+                            %resource.repeat(item).where(linkId='problems-summary').first().answer.valueString.exists(),
+                            '### Problems' & '\n\n' & %resource.repeat(item).where(linkId='problems-summary').first().answer.valueString.first(),
+                            ''
+                          )
+                          |
+                          iif(
+                            %resource.repeat(item).where(linkId='allergies-summary').first().answer.valueString.exists(),
+                            '### Allergies & Intolerances' & '\n\n' & %resource.repeat(item).where(linkId='allergies-summary').first().answer.valueString.first(),
+                            ''
+                          )
+                          |
+                          iif(
+                            %resource.repeat(item).where(linkId='social-history-summary').first().answer.valueString.exists(),
+                            '### Social History' & '\n\n' & %resource.repeat(item).where(linkId='social-history-summary').first().answer.valueString.first(),
+                            ''
+                          )
+                          |
+                          iif(
+                            %resource.repeat(item).where(linkId='procedures-summary').first().answer.valueString.exists(),
+                            '### Procedures' & '\n\n' & %resource.repeat(item).where(linkId='procedures-summary').first().answer.valueString.first(),
+                            ''
+                          )
+                          |
+                          iif(
+                            %resource.repeat(item).where(linkId='medications-summary').first().answer.valueString.exists(),
+                            '### Medications' & '\n\n' & %resource.repeat(item).where(linkId='medications-summary').first().answer.valueString.first(),
+                            ''
+                          )
+                          |
+                          iif(
+                            %resource.repeat(item).where(linkId='immunizations-summary').first().answer.valueString.exists(),
+                            '### Immunizations' & '\n\n' & %resource.repeat(item).where(linkId='immunizations-summary').first().answer.valueString.first(),
+                            ''
+                          )
+                          |
+                          iif(
+                            %resource.repeat(item).where(linkId='vital-signs-summary').first().answer.valueString.exists(),
+                            '### Vital Signs' & '\n\n' & %resource.repeat(item).where(linkId='vital-signs-summary').first().answer.valueString.first(),
+                            ''
+                          )
+                        ).where($this != '').join('\n\n\n'),
+                        'No summary sections completed yet.'
                       )
-                      |
-                      iif(
-                        %resource.repeat(item).where(linkId='allergies-summary').first().answer.valueString.exists(),
-                        '## Allergies & Intolerances' & '\n\n' & %resource.repeat(item).where(linkId='allergies-summary').first().answer.valueString.first(),
-                        ''
-                      )
-                      |
-                      iif(
-                        %resource.repeat(item).where(linkId='social-history-summary').first().answer.valueString.exists(),
-                        '## Social History' & '\n\n' & %resource.repeat(item).where(linkId='social-history-summary').first().answer.valueString.first(),
-                        ''
-                      )
-                      |
-                      iif(
-                        %resource.repeat(item).where(linkId='procedures-summary').first().answer.valueString.exists(),
-                        '## Procedures' & '\n\n' & %resource.repeat(item).where(linkId='procedures-summary').first().answer.valueString.first(),
-                        ''
-                      )
-                      |
-                      iif(
-                        %resource.repeat(item).where(linkId='medications-summary').first().answer.valueString.exists(),
-                        '## Medications' & '\n\n' & %resource.repeat(item).where(linkId='medications-summary').first().answer.valueString.first(),
-                        ''
-                      )
-                      |
-                      iif(
-                        %resource.repeat(item).where(linkId='immunizations-summary').first().answer.valueString.exists(),
-                        '## Immunizations' & '\n\n' & %resource.repeat(item).where(linkId='immunizations-summary').first().answer.valueString.first(),
-                        ''
-                      )
-                      |
-                      iif(
-                        %resource.repeat(item).where(linkId='vital-signs-summary').first().answer.valueString.exists(),
-                        '## Vital Signs' & '\n\n' & %resource.repeat(item).where(linkId='vital-signs-summary').first().answer.valueString.first(),
-                        ''
-                      )
-                    ).where($this != '').join('\n\n\n'),
-                    'No summary sections completed yet.'
-                  )
 
           - linkId: composition-date
             text: Document Date
             type: dateTime
             required: true
+            initialExpression:
+              language: text/fhirpath
+              expression: "now()"            
