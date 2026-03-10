@@ -120,7 +120,6 @@ body:
                       reference: "MedicationStatement/{{ %medicationId }}"
                     "{% else %}":
                       reference: "{{ 'urn:uuid:MedicationStatement-' + %index.toString() }}"
-                  "{% endif %}": ""
             "{% else %}":
               emptyReason:
                 coding:
@@ -232,9 +231,6 @@ body:
             note:
               - "{% if %problemNotes.exists() %}":
                   text: "{{ %problemNotes }}"
-            text:
-              status: generated
-              div: "<div xmlns='http://www.w3.org/1999/xhtml'><p><b>Generated Narrative</b></p><p><b>identifier</b>: id: urn:uuid:Condition-{{%index}}</p><p><b>clinicalStatus</b>: <span title='Codes: {http://terminology.hl7.org/CodeSystem/condition-clinical {{%problemClinicalStatus.code}}}'>{{%problemClinicalStatus.display}}</span></p><p><b>code</b>: <span title='Diagnosis}'>{{%problemCode.display | %problemCode}}</span></p><p><b>subject</b>: <a href='#Patient_{{%patientId}}'>See above (Patient/{{%patientId}})</a></p></div>"
     - "{% for index, allergyItem in %allergiesItems %}":
         "{% assign %}":
           - allergyId: "{{ %allergyItem.item.where(linkId='allergy-id').answer.valueString }}"
@@ -283,9 +279,6 @@ body:
                 - text: "{{ %allergyNotes }}"
             patient:
               reference: "Patient/{{ %patientId }}"
-            text:
-              status: generated
-              div: "<div xmlns='http://www.w3.org/1999/xhtml'><p><b>Generated Narrative</b></p><p><b>identifier</b>: id: urn:uuid:AllergyIntolerance-{{%index}}</p><p><b>clinicalStatus</b>: <span title='Codes: {http://terminology.hl7.org/CodeSystem/allergyintolerance-clinical {{%allergyClinicalStatus.code}}}'>{{%allergyClinicalStatus.display}}</span></p><p><b>code</b>: <span title='Allergy or Intolerance}'>{{%allergyCode.display | %allergyCode}}</span></p><p><b>subject</b>: <a href='#Patient_{{%patientId}}'>See above (Patient/{{%patientId}})</a></p></div>"
             reaction:
               - "{% for allergyReactionItem in %allergyReactionItems %}":
                   "{% assign %}":
@@ -347,9 +340,6 @@ body:
             dosage:
               - "{% for dosageItem in %medicationDosageItems %}":
                   text: "{{ %dosageItem.item.where(linkId='medication-dosage-amount').answer.valueString }}"
-            text:
-              status: generated
-              div: "<div xmlns='http://www.w3.org/1999/xhtml'><p><b>Generated Narrative</b></p><p><b>identifier</b>: id: urn:uuid:MedicationStatement-{{%index}}</p><p><b>status</b>: <span title='Codes: {http://terminology.hl7.org/CodeSystem/medication-statement-status {{%medicationStatus}}}'>{{%medicationStatus}}</span></p><p><b>medication</b>: {{%medicationPbsCode.display | %medicationAmtCode.display | '—'}}</p><p><b>effectiveDateTime</b>: {{%medicationEffectiveDateTime | '—'}}</p><p><b>subject</b>: <a href='#Patient_{{%patientId}}'>See above (Patient/{{%patientId}})</a></p></div>"
     - "{% for index, immunizationItem in %immunizationsItems %}":
         "{% assign %}":
           - immunizationId: "{{ %immunizationItem.item.where(linkId='immunization-id').answer.valueString }}"
@@ -393,9 +383,6 @@ body:
                   text: "{{ %immunizationNotes }}"
             patient:
               reference: "Patient/{{ %patientId }}"
-            text:
-              status: generated
-              div: "<div xmlns='http://www.w3.org/1999/xhtml'><p><b>Generated Narrative</b></p><p><b>status</b>: <span title='Codes: {http://terminology.hl7.org/CodeSystem/immunization-status}'>{{%immunizationStatus | 'completed'}}</span></p><p><b>vaccine</b>: <span title='Vaccine'>{{%immunizationVaccineDisplay}}</span></p><p><b>occurrence</b>: {{%immunizationDate | 'unknown'}}</p><p><b>patient</b>: <a href='#Patient_{{%patientId}}'>See above (Patient/{{%patientId}})</a></p></div>"
     - "{% for index, procedureItem in %proceduresItems %}":
         "{% assign %}":
           - procedureId: "{{ %procedureItem.item.where(linkId='procedure-id').answer.valueString }}"
@@ -431,6 +418,3 @@ body:
               - "{% if %procedureReasonCode.exists() %}":
                   coding:
                     - "{{ %procedureReasonCode }}"
-            text:
-              status: generated
-              div: "<div xmlns='http://www.w3.org/1999/xhtml'><p><b>Generated Narrative</b></p><p><b>identifier</b>: id: urn:uuid:Procedure-{{%index}}</p><p><b>status</b>: <span title='Codes: {http://terminology.hl7.org/CodeSystem/procedure-status {{%procedureStatus}}}'>{{%procedureStatus}}</span></p><p><b>code</b>: <span title='Procedure}'>{{%procedureCode.display | %procedureCode}}</span></p><p><b>subject</b>: <a href='#Patient_{{%patientId}}'>See above (Patient/{{%patientId}})</a></p></div>"

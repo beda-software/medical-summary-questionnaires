@@ -27,6 +27,7 @@ body:
     - vitalSignsSection: "{{ %QuestionnaireResponse.repeat(item).where(linkId='vital-signs-section').first() }}"
     - smokingStatusValue: "{{ %socialHistorySection.item.where(linkId='smoking-status').answer.valueCoding.first() }}"
     - pregnancyStatusValue: "{{ %socialHistorySection.item.where(linkId='pregnancy-status').answer.valueCoding.first() }}"
+    - vitalSignsDate: "{{ %effectiveDateTime }}"
     - systolicBp: "{{ %vitalSignsSection.item.where(linkId='systolic-bp').answer.valueQuantity.first() }}"
     - diastolicBp: "{{ %vitalSignsSection.item.where(linkId='diastolic-bp').answer.valueQuantity.first() }}"
     - heartRate: "{{ %vitalSignsSection.item.where(linkId='heart-rate').answer.valueQuantity.first() }}"
@@ -39,9 +40,6 @@ body:
         url: /Composition
       resource:
         resourceType: Composition
-        meta:
-          profile:
-            - http://hl7.org.au/fhir/ps/StructureDefinition/au-ps-composition
         status: final
         type:
           coding:
@@ -133,7 +131,6 @@ body:
                       reference: "MedicationStatement/{{ %medicationId }}"
                     "{% else %}":
                       reference: "{{ 'urn:uuid:MedicationStatement-' + %index.toString() }}"
-                  "{% endif %}": ""
             "{% else %}":
               emptyReason:
                 coding:
@@ -207,11 +204,11 @@ body:
                   div: "No vital signs recorded"
               entry:
                 - "{% if %systolicBp.exists() or %diastolicBp.exists() %}":
-                    reference: "urn:uuid:Observation-blood-pressure"
+                    reference: "{{ 'urn:uuid:Observation-blood-pressure' }}"
                 - "{% if %heartRate.exists() %}":
-                    reference: "urn:uuid:Observation-heart-rate"
+                    reference: "{{ 'urn:uuid:Observation-heart-rate' }}"
                 - "{% if %bodyWeight.exists() %}":
-                    reference: "urn:uuid:Observation-body-weight"
+                    reference: "{{ 'urn:uuid:Observation-body-weight' }}"
           - "{% if %smokingStatusValue.exists() or %pregnancyStatusValue.exists() %}":
               title: Social History
               code:
@@ -227,9 +224,9 @@ body:
                   div: "No social history recorded"
               entry:
                 - "{% if %smokingStatusValue.exists() %}":
-                    reference: "urn:uuid:Observation-smoking-status"
+                    reference: "{{' urn:uuid:Observation-smoking-status' }}"
                 - "{% if %pregnancyStatusValue.exists() %}":
-                    reference: "urn:uuid:Observation-pregnancy-status"
+                    reference: "{{ 'urn:uuid:Observation-pregnancy-status' }}"
     - "{% if %smokingStatusValue.exists() %}":
         fullUrl: "urn:uuid:Observation-smoking-status"
         request:
@@ -253,14 +250,11 @@ body:
                 code: "1747861000168109"
           subject:
             reference: "Patient/{{ %patientId }}"
-          effectiveDateTime: "{{ effectiveDateTime }}"
+          effectiveDateTime: "{{ %effectiveDateTime }}"
           valueCodeableConcept:
             "{% if %smokingStatusValue.exists() %}":
               coding:
                 - "{{ %smokingStatusValue }}"
-          text:
-            status: generated
-            div: "<div xmlns='http://www.w3.org/1999/xhtml'><p><b>Smoking Status</b></p><p><b>value</b>: {{ %smokingStatusValue.display | %smokingStatusValue.code }}</p><p><b>subject</b>: Patient/{{ %patientId }}</p></div>"
     - "{% if %pregnancyStatusValue.exists() %}":
         fullUrl: "urn:uuid:Observation-pregnancy-status"
         request:
@@ -282,15 +276,11 @@ body:
                 code: "364320009"
           subject:
             reference: "Patient/{{ %patientId }}"
-          effectiveDateTime: "{% effectiveDateTime %}"
+          effectiveDateTime: "{{ %effectiveDateTime }}"
           valueCodeableConcept:
             "{% if %pregnancyStatusValue.exists() %}":
               coding:
                 - "{{ %pregnancyStatusValue }}"
-          text:
-            status: generated
-            div: "<div xmlns='http://www.w3.org/1999/xhtml'><p><b>Pregnancy Status</b></p><p><b>value</b>: {{ %pregnancyStatusValue.display | %pregnancyStatusValue.code }}</p><p><b>subject</b>: Patient/{{ %patientId }}</p></div>"
-
     - "{% assign %}":
         - encounterId: "{{ %encounterSection.item.where(linkId='encounter-id').answer.valueString }}"
         - encounterClass: "{{ %encounterSection.item.where(linkId='encounter-class').answer.valueCoding.first() }}"
@@ -344,9 +334,6 @@ body:
                       - "{{ %participantItem.item.where(linkId='encounter-participant-role').answer.valueCoding.first() }}"
               individual:
                 "{% if %participantItem.item.where(linkId='encounter-participant-individual').answer.valueReference.exists() %}": "{{ %participantItem.item.where(linkId='encounter-participant-individual').answer.valueReference.first() }}"
-        text:
-          status: generated
-          div: "<div xmlns='http://www.w3.org/1999/xhtml'><p><b>Encounter</b></p><p><b>status</b>: {{%encounterStatus}}</p><p><b>class</b>: {{%encounterClass.display}}</p><p><b>subject</b>: Patient/{{%patientId}}</p></div>"
     - "{% if %systolicBp.exists() or %diastolicBp.exists() %}":
         fullUrl: "urn:uuid:Observation-blood-pressure"
         request:
@@ -364,18 +351,26 @@ body:
                   system: http://terminology.hl7.org/CodeSystem/observation-category
                   display: Vital Signs
           code:
+            text: Blood pressure panel with all children optional
             coding:
               - code: "85354-9"
                 system: http://loinc.org
                 display: Blood pressure panel with all children optional
+              - code: "75367002"
+                system: http://snomed.info/sct
+                display: Blood pressure panel with all children optional
           subject:
             reference: "Patient/{{ %patientId }}"
-          effectiveDateTime: "{{ effectiveDateTime }}"
+          effectiveDateTime: "{{ %effectiveDateTime }}"
           component:
             - code:
+                text: Systolic blood pressure
                 coding:
                   - code: "8480-6"
                     system: http://loinc.org
+                    display: Systolic blood pressure
+                  - code: "271649006"
+                    system: "http://snomed.info/sct"
                     display: Systolic blood pressure
               valueQuantity:
                 "{% if %systolicBp.exists() %}":
@@ -390,9 +385,13 @@ body:
                       system: http://terminology.hl7.org/CodeSystem/data-absent-reason
                       display: Not Performed
             - code:
+                text: Diastolic blood pressure
                 coding:
                   - code: "8462-4"
                     system: http://loinc.org
+                    display: Diastolic blood pressure
+                  - code: "271650006"
+                    system: "http://snomed.info/sct"
                     display: Diastolic blood pressure
               valueQuantity:
                 "{% if %diastolicBp.exists() %}":
@@ -406,9 +405,6 @@ body:
                     - code: not-performed
                       system: http://terminology.hl7.org/CodeSystem/data-absent-reason
                       display: Not Performed
-          text:
-            status: generated
-            div: "<div xmlns='http://www.w3.org/1999/xhtml'><p><b>Blood Pressure</b></p><p><b>systolic</b>: {{%systolicBp.value | '—'}} mm[Hg]</p><p><b>diastolic</b>: {{%diastolicBp.value | '—'}} mm[Hg]</p><p><b>subject</b>: Patient/{{%patientId}}</p></div>"
     - "{% if %heartRate.exists() %}":
         fullUrl: "urn:uuid:Observation-heart-rate"
         request:
@@ -426,9 +422,13 @@ body:
                   system: http://terminology.hl7.org/CodeSystem/observation-category
                   display: Vital Signs
           code:
+            text: Heart rate
             coding:
               - code: "8867-4"
                 system: http://loinc.org
+                display: Heart rate
+              - code: "364075005"
+                system: "http://snomed.info/sct"
                 display: Heart rate
           subject:
             reference: "Patient/{{ %patientId }}"
@@ -440,9 +440,6 @@ body:
             unit: "beats/min"
             system: http://unitsofmeasure.org
             code: "/min"
-          text:
-            status: generated
-            div: "<div xmlns='http://www.w3.org/1999/xhtml'><p><b>Heart Rate</b></p><p><b>value</b>: {{%heartRate.value}} /min</p><p><b>subject</b>: Patient/{{%patientId}}</p></div>"
     - "{% if %bodyWeight.exists() %}":
         fullUrl: "urn:uuid:Observation-body-weight"
         request:
@@ -460,9 +457,13 @@ body:
                   system: http://terminology.hl7.org/CodeSystem/observation-category
                   display: Vital Signs
           code:
+            text: Body weight
             coding:
               - code: "29463-7"
                 system: http://loinc.org
+                display: Body weight
+              - code: "27113001"
+                system: "http://snomed.info/sct"
                 display: Body weight
           subject:
             reference: "Patient/{{ %patientId }}"
@@ -474,9 +475,6 @@ body:
             unit: kg
             system: http://unitsofmeasure.org
             code: kg
-          text:
-            status: generated
-            div: "<div xmlns='http://www.w3.org/1999/xhtml'><p><b>Body Weight</b></p><p><b>value</b>: {{%bodyWeight.value}} kg</p><p><b>subject</b>: Patient/{{%patientId}}</p></div>"
     - "{% for index, problemItem in %problemItems %}":
         "{% assign %}":
           - problemId: "{{ %problemItem.item.where(linkId='condition-id').answer.valueString }}"
@@ -530,9 +528,6 @@ body:
             note:
               - "{% if %problemNotes.exists() %}":
                   text: "{{ %problemNotes }}"
-            text:
-              status: generated
-              div: "<div xmlns='http://www.w3.org/1999/xhtml'><p><b>Generated Narrative</b></p><p><b>identifier</b>: id: urn:uuid:Condition-{{%index}}</p><p><b>clinicalStatus</b>: <span title='Codes: {http://terminology.hl7.org/CodeSystem/condition-clinical {{%problemClinicalStatus.code}}}'>{{%problemClinicalStatus.display}}</span></p><p><b>code</b>: <span title='Diagnosis}'>{{%problemCode.display | %problemCode}}</span></p><p><b>subject</b>: <a href='#Patient_{{%patientId}}'>See above (Patient/{{%patientId}})</a></p></div>"
     - "{% for index, allergyItem in %allergiesItems %}":
         "{% assign %}":
           - allergyId: "{{ %allergyItem.item.where(linkId='allergy-id').answer.valueString }}"
@@ -581,9 +576,6 @@ body:
                 - text: "{{ %allergyNotes }}"
             patient:
               reference: "Patient/{{ %patientId }}"
-            text:
-              status: generated
-              div: "<div xmlns='http://www.w3.org/1999/xhtml'><p><b>Generated Narrative</b></p><p><b>identifier</b>: id: urn:uuid:AllergyIntolerance-{{%index}}</p><p><b>clinicalStatus</b>: <span title='Codes: {http://terminology.hl7.org/CodeSystem/allergyintolerance-clinical {{%allergyClinicalStatus.code}}}'>{{%allergyClinicalStatus.display}}</span></p><p><b>code</b>: <span title='Allergy or Intolerance}'>{{%allergyCode.display | %allergyCode}}</span></p><p><b>subject</b>: <a href='#Patient_{{%patientId}}'>See above (Patient/{{%patientId}})</a></p></div>"
             reaction:
               - "{% for allergyReactionItem in %allergyReactionItems %}":
                   "{% assign %}":
@@ -642,9 +634,6 @@ body:
             dosage:
               - "{% for dosageItem in %medicationDosageItems %}":
                   text: "{{ %dosageItem.item.where(linkId='medication-dosage-amount').answer.valueString }}"
-            text:
-              status: generated
-              div: "<div xmlns='http://www.w3.org/1999/xhtml'><p><b>Generated Narrative</b></p><p><b>identifier</b>: id: urn:uuid:MedicationStatement-{{%index}}</p><p><b>status</b>: <span title='Codes: {http://terminology.hl7.org/CodeSystem/medication-statement-status {{%medicationStatus}}}'>{{%medicationStatus}}</span></p><p><b>medication</b>: {{%medicationPbsCode.display | %medicationAmtCode.display | '—'}}</p><p><b>effectiveDateTime</b>: {{%medicationEffectiveDateTime | '—'}}</p><p><b>subject</b>: <a href='#Patient_{{%patientId}}'>See above (Patient/{{%patientId}})</a></p></div>"
     - "{% for index, immunizationItem in %immunizationsItems %}":
         "{% assign %}":
           - immunizationId: "{{ %immunizationItem.item.where(linkId='immunization-id').answer.valueString }}"
@@ -688,9 +677,6 @@ body:
                   text: "{{ %immunizationNotes }}"
             patient:
               reference: "Patient/{{ %patientId }}"
-            text:
-              status: generated
-              div: "<div xmlns='http://www.w3.org/1999/xhtml'><p><b>Generated Narrative</b></p><p><b>status</b>: <span title='Codes: {http://terminology.hl7.org/CodeSystem/immunization-status}'>{{%immunizationStatus | 'completed'}}</span></p><p><b>vaccine</b>: <span title='Vaccine'>{{%immunizationVaccineDisplay}}</span></p><p><b>occurrence</b>: {{%immunizationDate | 'unknown'}}</p><p><b>patient</b>: <a href='#Patient_{{%patientId}}'>See above (Patient/{{%patientId}})</a></p></div>"
     - "{% for index, procedureItem in %proceduresItems %}":
         "{% assign %}":
           - procedureId: "{{ %procedureItem.item.where(linkId='procedure-id').answer.valueString }}"
@@ -725,6 +711,3 @@ body:
               - "{% if %procedureReasonCode.exists() %}":
                   coding:
                     - "{{ %procedureReasonCode }}"
-            text:
-              status: generated
-              div: "<div xmlns='http://www.w3.org/1999/xhtml'><p><b>Generated Narrative</b></p><p><b>identifier</b>: id: urn:uuid:Procedure-{{%index}}</p><p><b>status</b>: <span title='Codes: {http://terminology.hl7.org/CodeSystem/procedure-status {{%procedureStatus}}}'>{{%procedureStatus}}</span></p><p><b>code</b>: <span title='Procedure}'>{{%procedureCode.display | %procedureCode}}</span></p><p><b>subject</b>: <a href='#Patient_{{%patientId}}'>See above (Patient/{{%patientId}})</a></p></div>"

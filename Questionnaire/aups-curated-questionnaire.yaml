@@ -86,119 +86,6 @@ item:
       coding:
         - code: wizard-vertical
     item:
-      - linkId: summary-section
-        text: Summary
-        type: group
-        item:
-          - linkId: encounter-summary
-            type: display
-            itemControl:
-              coding:
-                - code: markdown
-            _text:
-              cqfExpression:
-                language: text/fhirpath
-                expression: >-
-                  iif(
-                    (
-                      %resource.repeat(item).where(linkId='problems-summary').first().answer.valueString.exists()
-                      or %resource.repeat(item).where(linkId='allergies-summary').first().answer.valueString.exists()
-                      or %resource.repeat(item).where(linkId='social-history-summary').first().answer.valueString.exists()
-                      or %resource.repeat(item).where(linkId='procedures-summary').first().answer.valueString.exists()
-                      or %resource.repeat(item).where(linkId='medications-summary').first().answer.valueString.exists()
-                      or %resource.repeat(item).where(linkId='immunizations-summary').first().answer.valueString.exists()
-                      or %resource.repeat(item).where(linkId='vital-signs-summary').first().answer.valueString.exists()
-                    ),
-                    (
-                      iif(
-                        %resource.repeat(item).where(linkId='problems-summary').first().answer.valueString.exists(),
-                        '## Problems' & '\n\n' & %resource.repeat(item).where(linkId='problems-summary').first().answer.valueString.first(),
-                        ''
-                      )
-                      |
-                      iif(
-                        %resource.repeat(item).where(linkId='allergies-summary').first().answer.valueString.exists(),
-                        '## Allergies & Intolerances' & '\n\n' & %resource.repeat(item).where(linkId='allergies-summary').first().answer.valueString.first(),
-                        ''
-                      )
-                      |
-                      iif(
-                        %resource.repeat(item).where(linkId='social-history-summary').first().answer.valueString.exists(),
-                        '## Social History' & '\n\n' & %resource.repeat(item).where(linkId='social-history-summary').first().answer.valueString.first(),
-                        ''
-                      )
-                      |
-                      iif(
-                        %resource.repeat(item).where(linkId='procedures-summary').first().answer.valueString.exists(),
-                        '## Procedures' & '\n\n' & %resource.repeat(item).where(linkId='procedures-summary').first().answer.valueString.first(),
-                        ''
-                      )
-                      |
-                      iif(
-                        %resource.repeat(item).where(linkId='medications-summary').first().answer.valueString.exists(),
-                        '## Medications' & '\n\n' & %resource.repeat(item).where(linkId='medications-summary').first().answer.valueString.first(),
-                        ''
-                      )
-                      |
-                      iif(
-                        %resource.repeat(item).where(linkId='immunizations-summary').first().answer.valueString.exists(),
-                        '## Immunizations' & '\n\n' & %resource.repeat(item).where(linkId='immunizations-summary').first().answer.valueString.first(),
-                        ''
-                      )
-                      |
-                      iif(
-                        %resource.repeat(item).where(linkId='vital-signs-summary').first().answer.valueString.exists(),
-                        '## Vital Signs' & '\n\n' & %resource.repeat(item).where(linkId='vital-signs-summary').first().answer.valueString.first(),
-                        ''
-                      )
-                    ).where($this != '').join('\n\n\n'),
-                    'No summary sections completed yet.'
-                  )
-
-      - linkId: patient-information
-        text: Patient Information
-        type: group
-        item:
-          - linkId: patient-id
-            text: Patient ID
-            type: string
-            hidden: true
-            initialExpression:
-              language: text/fhirpath
-              expression: "%Patient.id"
-
-          - linkId: patient-name
-            text: Name
-            type: string
-            readOnly: true
-            initialExpression:
-              language: text/fhirpath
-              expression: "%Patient.name.first().given.first() + ' ' + %Patient.name.first().family"
-
-          - linkId: patient-medicare-number
-            text: Medicare Number
-            type: string
-            readOnly: true
-            initialExpression:
-              language: text/fhirpath
-              expression: "%Patient.identifier.where(system='http://ns.electronichealth.net.au/id/medicare-number').first().value"
-
-          - linkId: patient-gender
-            text: Gender
-            type: string
-            readOnly: true
-            initialExpression:
-              language: text/fhirpath
-              expression: "%Patient.gender"
-
-          - linkId: patient-birthDate
-            text: Birth Date
-            type: date
-            readOnly: true
-            initialExpression:
-              language: text/fhirpath
-              expression: "%Patient.birthDate"
-          
       - linkId: problems-section
         text: Problems
         type: group
@@ -239,7 +126,7 @@ item:
                 initialExpression:
                   language: text/fhirpath
                   expression: "%context.onsetDateTime"
-                
+
               - linkId: condition-clinical-status
                 text: Clinical Status
                 type: choice
@@ -263,7 +150,7 @@ item:
                     true, false)
                 initialExpression:
                   language: text/fhirpath
-                  expression: "%context.abatementDateTime"                  
+                  expression: "%context.abatementDateTime"
 
               - linkId: condition-verification-status
                 text: Verification Status
@@ -298,17 +185,18 @@ item:
                 initialExpression:
                   language: text/fhirpath
                   expression: "%context.severity.coding"
-              
+
               - linkId: condition-notes
                 text: Notes
                 type: text
                 initialExpression:
                   language: text/fhirpath
                   expression: "%context.note.text"
-              
+
           - linkId: problems-summary
             text: Summary
             type: text
+            readOnly: true
             calculatedExpression:
               language: text/fhirpath
               expression: >-
@@ -399,106 +287,6 @@ item:
                   .where($this != '')
                   .join('\n\n\n')
 
-          - linkId: allergies-summary
-            text: Summary
-            type: text
-            calculatedExpression:
-              language: text/fhirpath
-              expression: >-
-                %resource.repeat(item)
-                  .where(linkId='allergies')
-                  .select(
-                    iif(
-                      repeat(item)
-                        .where(linkId='allergy-code')
-                        .answer.valueCoding.exists(),
-                      'Allergy: '
-                        & repeat(item)
-                          .where(linkId='allergy-code')
-                          .answer.valueCoding.display.first()
-                      & iif(
-                        repeat(item)
-                          .where(linkId='allergy-type')
-                          .answer.valueCoding.exists(),
-                        '  \nType: '
-                          & repeat(item)
-                            .where(linkId='allergy-type')
-                            .answer.valueCoding.display.first(),
-                        ''
-                      )
-                      & iif(
-                        repeat(item)
-                          .where(linkId='allergy-clinical-status')
-                          .answer.valueCoding.exists(),
-                        '  \nClinical status: '
-                          & repeat(item)
-                            .where(linkId='allergy-clinical-status')
-                            .answer.valueCoding.display.first(),
-                        ''
-                      )
-                      & iif(
-                        repeat(item)
-                          .where(linkId='allergy-verification-status')
-                          .answer.valueCoding.exists(),
-                        '  \nVerification status: '
-                          & repeat(item)
-                            .where(linkId='allergy-verification-status')
-                            .answer.valueCoding.display.first(),
-                        ''
-                      )
-                      & iif(
-                        repeat(item)
-                          .where(linkId='allergy-onset-datetime')
-                          .answer.valueDateTime.exists(),
-                        '  \nOnset: '
-                          & repeat(item)
-                            .where(linkId='allergy-onset-datetime')
-                            .answer.valueDateTime.first().toString(),
-                        ''
-                      )
-                      & iif(
-                        repeat(item)
-                          .where(linkId='allergy-reaction-group')
-                          .answer.exists(),
-                        '  \nReactions: '
-                          & repeat(item)
-                            .where(linkId='allergy-reaction-group')
-                            .select(
-                              repeat(item)
-                                .where(linkId='allergy-manifestation')
-                                .answer.valueCoding.display.first()
-                              & iif(
-                                repeat(item)
-                                  .where(linkId='allergy-severity')
-                                  .answer.valueCoding.exists(),
-                                ' ('
-                                  & repeat(item)
-                                    .where(linkId='allergy-severity')
-                                    .answer.valueCoding.display.first()
-                                  & ')',
-                                ''
-                              )
-                            )
-                            .where($this.exists())
-                            .join(', '),
-                        ''
-                      )
-                      & iif(
-                        repeat(item)
-                          .where(linkId='allergy-notes')
-                          .answer.valueString.exists(),
-                        '  \n\nNotes: '
-                          & repeat(item)
-                            .where(linkId='allergy-notes')
-                            .answer.valueString.first(),
-                        ''
-                      ),
-                      ''
-                    )
-                  )
-                  .where($this != '')
-                  .join('\n\n\n')
-
       - linkId: medications-section
         text: Medications
         type: group
@@ -520,81 +308,6 @@ item:
                   language: text/fhirpath
                   expression: "%context.id"
 
-              - linkId: medication-pbs-code
-                text: PBS Code
-                type: choice
-                # answerValueSet: http://terminology.hl7.org.au/ValueSet/pbs-item
-                # preferredTerminologyServer: http://pbs.gov.au/
-                # No Expansion for this valueset                  
-                entryFormat: Select PBS item
-                initialExpression:
-                  language: text/fhirpath
-                  expression: |-
-                    %Questionnaire.repeat(item)
-                      .where(linkId='medication-pbs-code')
-                      .answerOption.valueCoding.where(
-                        code = %context.medicationCodeableConcept.coding
-                          .where(system = 'http://pbs.gov.au/code/item')
-                          .code.first()
-                      )
-                answerOption:
-                  - valueCoding:
-                      system: http://pbs.gov.au/code/item
-                      code: "10001J"
-                      display: "10001J - Rifaximin"
-                  - valueCoding:
-                      system: http://pbs.gov.au/code/item
-                      code: "10003L"
-                      display: "10003L - Dabrafenib"
-                  - valueCoding:
-                      system: http://pbs.gov.au/code/item
-                      code: "10004M"
-                      display: "10004M - Sunitinib"
-                  - valueCoding:
-                      system: http://pbs.gov.au/code/item
-                      code: "10005N"
-                      display: "10005N - Olmesartan + amlodipine + hydrochlorothiazide"
-                  - valueCoding:
-                      system: http://pbs.gov.au/code/item
-                      code: "10007Q"
-                      display: "10007Q - fluticasone propionate + formoterol"
-                  - valueCoding:
-                      system: http://pbs.gov.au/code/item
-                      code: "10008R"
-                      display: "10008R - fluticasone propionate + formoterol"
-                  - valueCoding:
-                      system: http://pbs.gov.au/code/item
-                      code: "10009T"
-                      display: "10009T - Sunitinib"
-                  - valueCoding:
-                      system: http://pbs.gov.au/code/item
-                      code: "10010W"
-                      display: "10010W - Sunitinib"
-                  - valueCoding:
-                      system: http://pbs.gov.au/code/item
-                      code: "10011X"
-                      display: "10011X - Sunitinib"
-                  - valueCoding:
-                      system: http://pbs.gov.au/code/item
-                      code: "10012Y"
-                      display: "10012Y - Dapagliflozin"
-                  - valueCoding:
-                      system: http://pbs.gov.au/code/item
-                      code: "10014C"
-                      display: "10014C - Ivabradine"
-                  - valueCoding:
-                      system: http://pbs.gov.au/code/item
-                      code: "10015D"
-                      display: "10015D - Ivabradine"
-                  - valueCoding:
-                      system: http://pbs.gov.au/code/item
-                      code: "10017F"
-                      display: "10017F - Erlotinib"
-                  - valueCoding:
-                      system: http://pbs.gov.au/code/item
-                      code: "10018G"
-                      display: "10018G - Budesonide + formoterol"
-
               - linkId: medication-amt-code
                 text: AMT Code
                 type: choice
@@ -609,7 +322,7 @@ item:
                 choiceColumn:
                   - path: code + ' - ' + display
                     forDisplay: true
-                    
+
               - linkId: medication-effective-datetime
                 text: Effective Date/Time
                 helpText: "When the medication is/was/will be taken?"
@@ -622,6 +335,7 @@ item:
               - linkId: medication-status
                 text: Status
                 type: choice
+                required: true
                 entryFormat: Select status
                 initialExpression:
                   language: text/fhirpath
@@ -1235,10 +949,112 @@ item:
             initialExpression:
               language: text/fhirpath
               expression: "%Patient.name.first().given.first() + ' ' + %Patient.name.first().family + ' AUPS document'"
+          - linkId: patient-id
+            text: Patient ID
+            type: string
+            hidden: true
+            initialExpression:
+              language: text/fhirpath
+              expression: "%Patient.id"
+
+          - linkId: patient-name
+            text: Name
+            type: string
+            readOnly: true
+            initialExpression:
+              language: text/fhirpath
+              expression: "%Patient.name.first().given.first() + ' ' + %Patient.name.first().family"
+
+          - linkId: patient-medicare-number
+            text: Medicare Number
+            type: string
+            readOnly: true
+            initialExpression:
+              language: text/fhirpath
+              expression: "%Patient.identifier.where(system='http://ns.electronichealth.net.au/id/medicare-number').first().value"
+
+          - linkId: patient-gender
+            text: Gender
+            type: string
+            readOnly: true
+            initialExpression:
+              language: text/fhirpath
+              expression: "%Patient.gender"
+
+          - linkId: patient-birthDate
+            text: Birth Date
+            type: date
+            readOnly: true
+            initialExpression:
+              language: text/fhirpath
+              expression: "%Patient.birthDate"
+ 
+          - linkId: encounter-summary
+            type: display
+            itemControl:
+              coding:
+                - code: markdown
+            _text:
+              cqfExpression:
+                language: text/fhirpath
+                expression: >-
+                  iif(
+                    (
+                      %resource.repeat(item).where(linkId='problems-summary').first().answer.valueString.exists()
+                      or %resource.repeat(item).where(linkId='allergies-summary').first().answer.valueString.exists()
+                      or %resource.repeat(item).where(linkId='social-history-summary').first().answer.valueString.exists()
+                      or %resource.repeat(item).where(linkId='procedures-summary').first().answer.valueString.exists()
+                      or %resource.repeat(item).where(linkId='medications-summary').first().answer.valueString.exists()
+                      or %resource.repeat(item).where(linkId='immunizations-summary').first().answer.valueString.exists()
+                      or %resource.repeat(item).where(linkId='vital-signs-summary').first().answer.valueString.exists()
+                    ),
+                    (
+                      iif(
+                        %resource.repeat(item).where(linkId='problems-summary').first().answer.valueString.exists(),
+                        '## Problems' & '\n\n' & %resource.repeat(item).where(linkId='problems-summary').first().answer.valueString.first(),
+                        ''
+                      )
+                      |
+                      iif(
+                        %resource.repeat(item).where(linkId='allergies-summary').first().answer.valueString.exists(),
+                        '## Allergies & Intolerances' & '\n\n' & %resource.repeat(item).where(linkId='allergies-summary').first().answer.valueString.first(),
+                        ''
+                      )
+                      |
+                      iif(
+                        %resource.repeat(item).where(linkId='social-history-summary').first().answer.valueString.exists(),
+                        '## Social History' & '\n\n' & %resource.repeat(item).where(linkId='social-history-summary').first().answer.valueString.first(),
+                        ''
+                      )
+                      |
+                      iif(
+                        %resource.repeat(item).where(linkId='procedures-summary').first().answer.valueString.exists(),
+                        '## Procedures' & '\n\n' & %resource.repeat(item).where(linkId='procedures-summary').first().answer.valueString.first(),
+                        ''
+                      )
+                      |
+                      iif(
+                        %resource.repeat(item).where(linkId='medications-summary').first().answer.valueString.exists(),
+                        '## Medications' & '\n\n' & %resource.repeat(item).where(linkId='medications-summary').first().answer.valueString.first(),
+                        ''
+                      )
+                      |
+                      iif(
+                        %resource.repeat(item).where(linkId='immunizations-summary').first().answer.valueString.exists(),
+                        '## Immunizations' & '\n\n' & %resource.repeat(item).where(linkId='immunizations-summary').first().answer.valueString.first(),
+                        ''
+                      )
+                      |
+                      iif(
+                        %resource.repeat(item).where(linkId='vital-signs-summary').first().answer.valueString.exists(),
+                        '## Vital Signs' & '\n\n' & %resource.repeat(item).where(linkId='vital-signs-summary').first().answer.valueString.first(),
+                        ''
+                      )
+                    ).where($this != '').join('\n\n\n'),
+                    'No summary sections completed yet.'
+                  )
 
           - linkId: composition-date
             text: Document Date
             type: dateTime
-            initialExpression:
-              language: text/fhirpath
-              expression: "now()"
+            required: true
