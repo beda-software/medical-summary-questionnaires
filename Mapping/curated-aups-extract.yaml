@@ -34,7 +34,7 @@ body:
           coding:
             - code: 60591-5
               system: http://loinc.org
-              display: Patient Summary Document
+              display: Patient summary Document
         subject:
           reference: "Patient/{{ %patientId }}"
           display: "{{ %patientName }}"
@@ -59,9 +59,9 @@ body:
             text:
               status: generated
               "{% if %problemsSummary.exists() %}":
-                div: "{{ %problemsSummary }}"
+                div: "<div xmlns=\"http://www.w3.org/1999/xhtml\">{{ %problemsSummary }}</div>"
               "{% else %}":
-                div: "No summary provided"
+                div: "<div xmlns=\"http://www.w3.org/1999/xhtml\">No summary provided"
             "{% if %problemItems.count() > 0 %}":
               entry:
                 "{% for index, problemItem in %problemItems %}":
@@ -85,9 +85,9 @@ body:
             text:
               status: generated
               "{% if %allergiesSummary.exists() %}":
-                div: "{{ %allergiesSummary }}"
+                div: "<div xmlns=\"http://www.w3.org/1999/xhtml\">{{ %allergiesSummary }}</div>"
               "{% else %}":
-                div: "No summary provided"
+                div: "<div xmlns=\"http://www.w3.org/1999/xhtml\">No summary provided</div>"
             "{% if %allergiesItems.count() > 0 %}":
               entry:
                 "{% for index, allergyItem in %allergiesItems %}":
@@ -111,9 +111,9 @@ body:
             text:
               status: generated
               "{% if %medicationsSummary.exists() %}":
-                div: "{{ %medicationsSummary }}"
+                div: "<div xmlns=\"http://www.w3.org/1999/xhtml\">{{ %medicationsSummary }}</div>"
               "{% else %}":
-                div: "No summary provided"
+                div: "<div xmlns=\"http://www.w3.org/1999/xhtml\">No summary provided</div>"
             "{% if %medicationsItems.count() > 0 %}":
               entry:
                 "{% for index, medicationItem in %medicationsItems %}":
@@ -136,14 +136,15 @@ body:
           - title: Immunizations
             code:
               coding:
-                - code: 36419-9
+                - code: 11369-6
                   system: http://loinc.org
+                  display: History of Immunization note
             text:
               status: generated
               "{% if %immunizationsSummary.exists() %}":
-                div: "{{ %immunizationsSummary }}"
+                div: "<div xmlns=\"http://www.w3.org/1999/xhtml\">{{ %immunizationsSummary }}</div>"
               "{% else %}":
-                div: "No summary provided"
+                div: "<div xmlns=\"http://www.w3.org/1999/xhtml\">No summary provided</div>"
             "{% if %immunizationsItems.count() > 0 %}":
               entry:
                 "{% for index, immunizationItem in %immunizationsItems %}":
@@ -167,9 +168,9 @@ body:
             text:
               status: generated
               "{% if %proceduresSummary.exists() %}":
-                div: "{{ %proceduresSummary }}"
+                div: "<div xmlns=\"http://www.w3.org/1999/xhtml\">{{ %proceduresSummary }}</div>"
               "{% else %}":
-                div: "No summary provided"
+                div: "<div xmlns=\"http://www.w3.org/1999/xhtml\">No summary provided</div>"
             "{% if %proceduresItems.count() > 0 %}":
               entry:
                 "{% for index, procedureItem in %proceduresItems %}":
