@@ -224,9 +224,6 @@ item:
             text: Problem
             type: group
             repeats: true
-            itemControl:
-              coding:
-              - code: group-table
             item:
               - linkId: condition-id
                 text: Condition ID
@@ -401,10 +398,6 @@ item:
             text: Allergy/Intolerance
             type: group
             repeats: true
-            itemControl:
-              coding:
-              - code: group-table
-  
             item:
               - linkId: allergy-id
                 text: Allergy ID
@@ -665,10 +658,6 @@ item:
             text: Procedure
             type: group
             repeats: true
-            itemControl:
-              coding:
-              - code: group-table
-  
             item:
               - linkId: procedure-id
                 text: Procedure ID
@@ -796,10 +785,6 @@ item:
             text: Medication
             type: group
             repeats: true
-            itemControl:
-              coding:
-              - code: group-table
-  
             item:
               - linkId: medication-statement-id
                 text: Medication Statement ID
@@ -1060,10 +1045,6 @@ item:
             text: Immunization
             type: group
             repeats: true
-            itemControl:
-              coding:
-              - code: group-table
-  
             item:
               - linkId: immunization-id
                 text: Immunization ID
