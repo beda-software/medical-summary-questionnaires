@@ -90,6 +90,12 @@ item:
         text: Problems
         type: group
         item:
+        - linkId: problems-voice-group
+          type: group
+          itemControl:
+              coding:
+              - code: group-voice
+          item:
           - linkId: problems
             text: Problem
             type: group
@@ -295,6 +301,12 @@ item:
         text: Allergies & Intolerances
         type: group
         item:
+        - linkId: allergies-voice-group
+          type: group
+          itemControl:
+              coding:
+              - code: group-voice
+          item:
           - linkId: allergies
             text: Allergy/Intolerance
             type: group
@@ -525,6 +537,12 @@ item:
         text: Medications
         type: group
         item:
+        - linkId: medications-voice-group
+          type: group
+          itemControl:
+              coding:
+              - code: group-voice
+          item:
           - linkId: medications
             text: Medication
             type: group
@@ -818,6 +836,12 @@ item:
         text: Immunizations
         type: group
         item:
+        - linkId: immunizations-voice-group
+          type: group
+          itemControl:
+              coding:
+              - code: group-voice
+          item:
           - linkId: immunizations
             text: Immunization
             type: group
@@ -1043,6 +1067,12 @@ item:
         text: Procedures
         type: group
         item:
+        - linkId: procedures-voice-group
+          type: group
+          itemControl:
+              coding:
+              - code: group-voice
+          item:
           - linkId: procedures
             text: Procedure
             type: group
