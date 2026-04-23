@@ -1,0 +1,252 @@
+resourceType: Mapping
+id: preadmission-composition
+type: FHIRPath
+body:
+  "{% assign %}":
+    - patientId: "{{ %QuestionnaireResponse.answers('patientId') }}"
+    - givenName: "{{ %QuestionnaireResponse.answers('given-name') }}"
+    - familyName: "{{ %QuestionnaireResponse.answers('family-name') }}"
+    - patientFullName: "{{ %givenName & ' ' & %familyName }}"
+    - dateOfBirth: "{{ %QuestionnaireResponse.answers('date-of-birth') }}"
+    - sexCoding: "{{ %QuestionnaireResponse.repeat(item).where(linkId='sex').answer.valueCoding.first() }}"
+    - sexDisplay: "{{ (%sexCoding.display | %sexCoding.code).first() }}"
+    - genderCode: "{{ (%sexCoding.code | 'unknown').first() }}"
+
+    - medicareNumber: "{{ %QuestionnaireResponse.answers('medicare-number') }}"
+    - medicareExpiry: "{{ %QuestionnaireResponse.answers('medicare-expiry') }}"
+    - overseasVisitor: "{{ %QuestionnaireResponse.repeat(item).where(linkId='overseas-visitor').answer.valueCoding.display.first() }}"
+    - interpreterRequired: "{{ %QuestionnaireResponse.repeat(item).where(linkId='interpreter-required').answer.valueBoolean.first() }}"
+    - interpreterRequiredText: "{{ iif(%interpreterRequired = true, 'Yes', iif(%interpreterRequired = false, 'No', '')) }}"
+    - preferredLanguage: "{{ %QuestionnaireResponse.repeat(item).where(linkId='preferred-language').answer.valueCoding.first() }}"
+    - preferredLanguageDisplay: "{{ (%preferredLanguage.display | %preferredLanguage.code).first() }}"
+    - maritalStatus: "{{ %QuestionnaireResponse.repeat(item).where(linkId='marital-status').answer.valueCoding.display.first() }}"
+    - indigenousOrigin: "{{ %QuestionnaireResponse.repeat(item).where(linkId='indigenous-origin').answer.valueCoding.display.first() }}"
+
+    - residentialStreet: "{{ %QuestionnaireResponse.answers('residential-street-address') }}"
+    - residentialSuburb: "{{ %QuestionnaireResponse.answers('residential-suburb') }}"
+    - residentialStateDisplay: "{{ %QuestionnaireResponse.repeat(item).where(linkId='residential-state').answer.valueCoding.display.first() }}"
+    - residentialStateCode: "{{ %QuestionnaireResponse.repeat(item).where(linkId='residential-state').answer.valueCoding.code.first() }}"
+    - residentialPostcode: "{{ %QuestionnaireResponse.answers('residential-postcode') }}"
+    - residentialEmail: "{{ %QuestionnaireResponse.answers('residential-email') }}"
+    - residentialHomePhone: "{{ %QuestionnaireResponse.answers('residential-home-phone') }}"
+    - residentialMobile: "{{ %QuestionnaireResponse.answers('residential-mobile') }}"
+    - residentialAddressLine: "{{ %residentialStreet & ', ' & %residentialSuburb & ', ' & %residentialStateDisplay & ' ' & %residentialPostcode }}"
+    - postalDifferentFromResidential: "{{ %QuestionnaireResponse.repeat(item).where(linkId='postal-temporary-address-different-from-residential').answer.valueBoolean.first() }}"
+    - postalPoBox: "{{ %QuestionnaireResponse.answers('postal-po-box') }}"
+    - postalStreetAddress: "{{ %QuestionnaireResponse.answers('postal-street-address') }}"
+    - postalSuburb: "{{ %QuestionnaireResponse.answers('postal-suburb') }}"
+    - postalStateDisplay: "{{ %QuestionnaireResponse.repeat(item).where(linkId='postal-state').answer.valueCoding.display.first() }}"
+    - postalStateCode: "{{ %QuestionnaireResponse.repeat(item).where(linkId='postal-state').answer.valueCoding.code.first() }}"
+    - postalPostcode: "{{ %QuestionnaireResponse.answers('postal-postcode') }}"
+    - postalAddressLine: "{{ %postalPoBox & ' ' & %postalStreetAddress & ', ' & %postalSuburb & ', ' & %postalStateDisplay & ' ' & %postalPostcode }}"
+
+    - hospitalLocationRef: "{{ %QuestionnaireResponse.repeat(item).where(linkId='hospital-location').answer.valueReference.first() }}"
+    - contactRows: "{[ %QuestionnaireResponse.repeat(item).where(linkId='person-to-contact-item') ]}"
+    - contactCount: "{{ %contactRows.count() }}"
+    - contactsSummaryLines: >-
+        {{ %contactRows.select(
+          'Name: ' &
+          item.where(linkId='contact-given-name').answer.valueString.first() & ' ' &
+          item.where(linkId='contact-family-name').answer.valueString.first() &
+          ', Relationship: ' &
+          item.where(linkId='contact-relationship').answer.valueCoding.display.first() &
+          ', Home: ' &
+          item.where(linkId='contact-home-phone').answer.valueString.first() &
+          ', Mobile: ' &
+          item.where(linkId='contact-mobile').answer.valueString.first()
+        ).join('<br/>') }}
+
+    - authorRef: "{{ %Author.resourceType + '/' + %Author.id }}"
+    - authorDisplay: "{{ iif(%Author.resourceType = 'Organization', %Author.name, %Author.name.first().given.first() & ' ' & %Author.name.first().family) }}"
+
+    - patientSectionDiv: >-
+        {{ '<div xmlns="http://www.w3.org/1999/xhtml">' &
+        '<b>Personal details</b><br/>' &
+        'Name: ' & %patientFullName & '<br/>' &
+        'DOB: ' & %dateOfBirth & '<br/>' &
+        'Sex: ' & %sexDisplay & '<br/>' &
+        'Medicare: ' & %medicareNumber & '<br/>' &
+        'Medicare expiry: ' & %medicareExpiry & '<br/>' &
+        'Overseas visitor: ' & %overseasVisitor & '<br/>' &
+        'Interpreter required: ' & %interpreterRequiredText & '<br/>' &
+        'Preferred language: ' & %preferredLanguageDisplay & '<br/>' &
+        'Marital status: ' & %maritalStatus & '<br/>' &
+        'Indigenous origin: ' & %indigenousOrigin & '<br/>' &
+        '<br/><b>Residential address</b><br/>' &
+        'Address: ' & %residentialAddressLine & '<br/>' &
+        'Email: ' & %residentialEmail & '<br/>' &
+        'Home phone: ' & %residentialHomePhone & '<br/>' &
+        'Mobile: ' & %residentialMobile & '<br/>' &
+        iif(
+          %postalDifferentFromResidential = true,
+          '<br/><b>Postal/Temporary address</b><br/>' &
+          'Address: ' & %postalAddressLine & '<br/>',
+          ''
+        ) &
+        '<br/><b>Contact person</b><br/>' &
+        'Total contacts: ' & %contactCount.toString() & '<br/>' &
+        %contactsSummaryLines & '<br/>' &
+        '</div>' }}
+        
+    - procedureSectionDiv: "{{ '<div xmlns=\"http://www.w3.org/1999/xhtml\"><b>Hospital for procedure</b><br/>' & iif(%hospitalLocationRef.display.exists(), %hospitalLocationRef.display, %hospitalLocationRef.reference) & '</div>' }}"
+
+  resourceType: Bundle
+  type: transaction
+  entry:
+    - request:
+        method: POST
+        url: /Composition
+      resource:
+        resourceType: Composition
+        meta:
+          profile:
+            - http://hl7.org.au/fhir/ps/StructureDefinition/au-ps-composition
+        status: final
+        type:
+          coding:
+            - system: http://loinc.org
+              code: 34133-9
+              display: Summary of episode note
+        subject:
+          reference: "{{ 'Patient/' + %patientId }}"
+          display: "{{ %patientFullName }}"
+        date: "{{ now() }}"
+        author:
+          - reference: "{{ %authorRef }}"
+            display: "{{ %authorDisplay }}"
+        title: Pre-Procedure Health Questionnaire
+        section:
+          - title: Patient demographics and administrative information
+            code:
+              coding:
+                - system: http://loinc.org
+                  code: 86638-4
+                  display: Patient demographic and administrative information panel
+            text:
+              status: generated
+              div: "{{ %patientSectionDiv }}"
+            entry:
+              - "{% for index, contactRow in %contactRows %}":
+                  "{% assign %}":
+                    - contactGivenName: "{{ %contactRow.item.where(linkId='contact-given-name').answer.valueString }}"
+                    - contactFamilyName: "{{ %contactRow.item.where(linkId='contact-family-name').answer.valueString }}"
+                    - contactRelationshipCoding: "{{ %contactRow.item.where(linkId='contact-relationship').answer.valueCoding.first() }}"
+                  "{% if %contactGivenName.exists() or %contactFamilyName.exists() or %contactRelationshipCoding.exists() %}":
+                    reference: "{{ 'urn:uuid:related-person-' + %index.toString() }}"
+          - title: Pre-procedure details
+            code:
+              coding:
+                - system: http://loinc.org
+                  code: 81679-3
+                  display: Preoperative measures for patient safety panel
+            text:
+              status: generated
+              div: "{{ %procedureSectionDiv }}"
+    - request:
+        "{% if %patientId.exists() %}":
+          method: PUT
+          url: "/Patient/{{ %patientId }}"
+        "{% else %}":
+          method: POST
+          url: /Patient
+      fullUrl: "{{ 'urn:uuid:patient-id' }}"
+      resource:
+        resourceType: Patient
+        id:
+          "{% if %patientId.exists() %}": "{{ %patientId }}"
+        name:
+          - use: official
+            given:
+              - "{{ %givenName }}"
+            family: "{{ %familyName }}"
+        gender: "{{ %genderCode }}"
+        birthDate: "{{ %dateOfBirth }}"
+        identifier:
+          - "{% if %medicareNumber.exists() %}":
+              type:
+                coding:
+                  - system: http://terminology.hl7.org/CodeSystem/v2-0203
+                    code: MC
+                    display: Medicare Number
+              system: http://ns.electronichealth.net.au/id/medicare-number
+              value: "{{ %medicareNumber }}"
+              period:
+                end:
+                  "{% if %medicareExpiry.exists() %}": "{{ %medicareExpiry }}"
+        telecom:
+          - "{% if %residentialEmail.exists() %}":
+              system: email
+              value: "{{ %residentialEmail }}"
+          - "{% if %residentialHomePhone.exists() %}":
+              system: phone
+              value: "{{ %residentialHomePhone }}"
+              use: home
+          - "{% if %residentialMobile.exists() %}":
+              system: phone
+              value: "{{ %residentialMobile }}"
+              use: mobile
+        communication:
+          - "{% if %preferredLanguage.exists() %}":
+              language:
+                coding:
+                  - "{{ %preferredLanguage }}"
+              preferred: true
+        address:
+          - line:
+              - "{{ %residentialStreet }}"
+            city: "{{ %residentialSuburb }}"
+            state: "{{ %residentialStateCode }}"
+            postalCode: "{{ %residentialPostcode }}"
+            use: home
+            type: physical
+          - "{% if %postalDifferentFromResidential = true %}":
+              line:
+                - "{{ %postalPoBox }}"
+                - "{{ %postalStreetAddress }}"
+              city: "{{ %postalSuburb }}"
+              state: "{{ %postalStateCode }}"
+              postalCode: "{{ %postalPostcode }}"
+              use: temp
+              type: postal
+    - "{% for index, contactRow in %contactRows %}":
+        "{% assign %}":
+          - contactGivenName: "{{ %contactRow.item.where(linkId='contact-given-name').answer.valueString }}"
+          - contactFamilyName: "{{ %contactRow.item.where(linkId='contact-family-name').answer.valueString }}"
+          - contactRelationshipCoding: "{{ %contactRow.item.where(linkId='contact-relationship').answer.valueCoding.first() }}"
+          - contactAddress: "{{ %contactRow.item.where(linkId='contact-address').answer.valueString }}"
+          - contactHomePhone: "{{ %contactRow.item.where(linkId='contact-home-phone').answer.valueString }}"
+          - contactMobile: "{{ %contactRow.item.where(linkId='contact-mobile').answer.valueString }}"
+        "{% if %contactGivenName.exists() or %contactFamilyName.exists() or %contactRelationshipCoding.exists() %}":
+          fullUrl: "{{ 'urn:uuid:related-person-' + %index.toString() }}"
+          request:
+            method: POST
+            url: /RelatedPerson
+          resource:
+            resourceType: RelatedPerson
+            meta:
+              profile:
+                - http://hl7.org.au/fhir/ps/StructureDefinition/au-ps-relatedperson
+            patient:
+              reference: "{{ iif(%patientId.exists(), 'Patient/' + %patientId, 'urn:uuid:patient-id') }}"
+            relationship:
+              - "{% if %contactRelationshipCoding.exists() %}":
+                  coding:
+                    - "{{ %contactRelationshipCoding }}"
+            name:
+              - "{% if %contactGivenName.exists() or %contactFamilyName.exists() %}":
+                  given:
+                    - "{% if %contactGivenName.exists() %}": "{{ %contactGivenName }}"
+                  family:
+                    "{% if %contactFamilyName.exists() %}": "{{ %contactFamilyName }}"
+            telecom:
+              - "{% if %contactHomePhone.exists() %}":
+                  system: phone
+                  value: "{{ %contactHomePhone }}"
+                  use: home
+              - "{% if %contactMobile.exists() %}":
+                  system: phone
+                  value: "{{ %contactMobile }}"
+                  use: mobile
+            address:
+              - "{% if %contactAddress.exists() %}":
+                  text: "{{ %contactAddress }}"
